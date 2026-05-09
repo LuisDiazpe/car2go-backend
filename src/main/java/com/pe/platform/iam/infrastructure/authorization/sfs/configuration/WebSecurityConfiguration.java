@@ -73,7 +73,17 @@ public class WebSecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/api/v1/vehicles/**",
+                                "/api/v1/inspections/vehicle/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(bearerAuthorizationRequestFilter, UsernamePasswordAuthenticationFilter.class);
