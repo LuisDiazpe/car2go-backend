@@ -2,7 +2,6 @@ package com.pe.platform.iam.infrastructure.authorization.sfs.configuration;
 
 import com.pe.platform.iam.infrastructure.authorization.sfs.pipeline.BearerAuthorizationRequestFilter;
 import com.pe.platform.iam.infrastructure.authorization.sfs.services.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,9 +24,6 @@ import java.util.List;
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfiguration {
-
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
-    private String allowedOrigins;
 
     private final UserDetailsServiceImpl userDetailsService;
     private final BearerAuthorizationRequestFilter bearerAuthorizationRequestFilter;
@@ -60,7 +56,7 @@ public class WebSecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var cors = new CorsConfiguration();
-        cors.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        cors.setAllowedOriginPatterns(List.of("*"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
@@ -73,28 +69,24 @@ public class WebSecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Rutas públicas (sin autenticación)
-                .requestMatchers(
-                    "/api/v1/auth/**",
-                    "/api/v1/vehicles/**",       // catálogo público de autos
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/api-docs/**",
-                    "/v3/api-docs/**"
-                ).permitAll()
-                // Rutas solo SELLER
-                .requestMatchers("/api/v1/vehicles/my/**").hasAuthority("ROLE_SELLER")
-                // Rutas solo MECHANIC
-                .requestMatchers("/api/v1/inspections/**").hasAuthority("ROLE_MECHANIC")
-                // Resto requiere autenticación
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(bearerAuthorizationRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/api/v1/vehicles/**",
+                                "/api/v1/inspections/vehicle/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(bearerAuthorizationRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
