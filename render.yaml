@@ -1,0 +1,36 @@
+# render.yaml — Deploy automático en Render
+# Sube este archivo al root de tu repo de backend
+
+services:
+  # ── Backend API ──────────────────────────────────────────
+  - type: web
+    name: car2go-api
+    runtime: java
+    plan: free
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/car2go-1.0.0.jar"
+    healthCheckPath: /api-docs
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Setear manualmente en el dashboard
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true  # Render genera uno aleatorio seguro
+      - key: JWT_EXPIRATION_DAYS
+        value: "7"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false          # Tu URL de Cloudflare Pages
+      - key: JPA_DDL_AUTO
+        value: "update"
+      - key: JPA_SHOW_SQL
+        value: "false"
+
+  # ── Base de datos MySQL ──────────────────────────────────
+databases:
+  - name: car2go-db
+    databaseName: car2go
+    user: car2go_user
+    plan: free
