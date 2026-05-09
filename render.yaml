@@ -12,17 +12,17 @@ services:
     healthCheckPath: /api-docs
     envVars:
       - key: DATABASE_URL
-        sync: false          # Setear manualmente en el dashboard
+        sync: false
       - key: DATABASE_USERNAME
         sync: false
       - key: DATABASE_PASSWORD
         sync: false
       - key: JWT_SECRET
-        generateValue: true  # Render genera uno aleatorio seguro
+        generateValue: true
       - key: JWT_EXPIRATION_DAYS
         value: "7"
       - key: CORS_ALLOWED_ORIGINS
-        sync: false          # Tu URL de Cloudflare Pages
+        sync: false
       - key: JPA_DDL_AUTO
         value: "update"
       - key: JPA_SHOW_SQL
