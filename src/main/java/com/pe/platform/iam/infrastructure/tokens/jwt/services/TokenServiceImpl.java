@@ -70,6 +70,8 @@ public class TokenServiceImpl implements TokenService {
             log.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            log.error("JWT signature invalid: {}", e.getMessage());
         }
         return false;
     }
