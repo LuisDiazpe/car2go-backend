@@ -1,0 +1,21 @@
+server:
+  port: ${PORT:8761}
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  client:
+    # El servidor Eureka no se registra a sí mismo
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    # Desactiva el modo de auto-preservación en desarrollo
+    enable-self-preservation: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
