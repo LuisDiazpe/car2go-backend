@@ -5,13 +5,23 @@ spring:
   application:
     name: config-server
   profiles:
-    active: native
+    include: native
   cloud:
     config:
       server:
         native:
-          # Lee las configuraciones de la carpeta del classpath
           search-locations: classpath:/configurations
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false
+    prefer-ip-address: false
 
 management:
   endpoints:

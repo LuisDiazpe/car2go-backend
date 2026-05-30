@@ -4,15 +4,19 @@ server:
 spring:
   application:
     name: discovery-server
+  security:
+    user:
+      name: ${EUREKA_USER:admin}
+      password: ${EUREKA_PASSWORD:admin123}
 
 eureka:
   client:
-    # El servidor Eureka no se registra a sí mismo
     register-with-eureka: false
     fetch-registry: false
   server:
-    # Desactiva el modo de auto-preservación en desarrollo
     enable-self-preservation: false
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME:localhost}
 
 management:
   endpoints:
