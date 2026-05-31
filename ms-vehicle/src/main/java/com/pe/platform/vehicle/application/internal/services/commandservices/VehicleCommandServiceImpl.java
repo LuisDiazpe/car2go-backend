@@ -47,4 +47,20 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
         }
         vehicleRepository.delete(vehicle);
     }
+
+    @Override
+    public void markReviewed(Long vehicleId) {
+        var vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + vehicleId));
+        vehicle.markAsReviewed();
+        vehicleRepository.save(vehicle);
+    }
+
+    @Override
+    public void markRejected(Long vehicleId) {
+        var vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + vehicleId));
+        vehicle.markAsRejected();
+        vehicleRepository.save(vehicle);
+    }
 }

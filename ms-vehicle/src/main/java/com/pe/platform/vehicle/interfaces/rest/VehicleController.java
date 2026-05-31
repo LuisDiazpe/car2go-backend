@@ -140,4 +140,30 @@ public class VehicleController {
                 .toList();
         return ResponseEntity.ok(vehicles);
     }
+
+    // ===== Endpoints internos (service-to-service): ms-inspection los llama =====
+
+    /** Llamado por ms-inspection cuando el mecanico APRUEBA: PENDING -> REVIEWED */
+    @PutMapping("/{id}/mark-reviewed")
+    @Operation(summary = "[Interno] Marcar vehiculo como REVIEWED (llamado por ms-inspection)")
+    public ResponseEntity<Void> markReviewed(@PathVariable Long id) {
+        try {
+            vehicleCommandService.markReviewed(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /** Llamado por ms-inspection cuando el mecanico RECHAZA: PENDING -> REJECTED */
+    @PutMapping("/{id}/mark-rejected")
+    @Operation(summary = "[Interno] Marcar vehiculo como REJECTED (llamado por ms-inspection)")
+    public ResponseEntity<Void> markRejected(@PathVariable Long id) {
+        try {
+            vehicleCommandService.markRejected(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

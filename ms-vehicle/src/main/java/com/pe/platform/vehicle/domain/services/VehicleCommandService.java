@@ -10,4 +10,6 @@ public interface VehicleCommandService {
     Optional<Vehicle> handle(CreateVehicleCommand command);
     Optional<Vehicle> handle(UpdateVehicleCommand command);
     void deleteVehicle(Long vehicleId, Long sellerProfileId);
+    void markReviewed(Long vehicleId);
+    void markRejected(Long vehicleId);
 }
