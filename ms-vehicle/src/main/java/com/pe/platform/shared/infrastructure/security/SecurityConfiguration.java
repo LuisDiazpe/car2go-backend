@@ -10,9 +10,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configuracion de seguridad del microservicio.
- * No valida JWT (eso lo hace el Gateway). Solo lee la identidad de los headers
- * via GatewayAuthenticationFilter y habilita @PreAuthorize por rol.
+ * Configuracion de seguridad del microservicio
+ * No valida JWT (eso lo hace el Gateway), solo lee la identidad de los headers
+ * via GatewayAuthenticationFilter
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)

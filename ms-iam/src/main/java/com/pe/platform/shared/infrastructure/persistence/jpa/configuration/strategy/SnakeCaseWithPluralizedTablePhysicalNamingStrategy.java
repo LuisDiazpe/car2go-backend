@@ -8,7 +8,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import java.util.Locale;
 
 /**
- * Naming strategy: converts CamelCase entity names to snake_case pluralized table names.
+ * Naming strategy: converts CamelCase entity names to snake_case pluralized table names
  * e.g. VehicleInspection -> vehicle_inspections
  */
 public class SnakeCaseWithPluralizedTablePhysicalNamingStrategy implements PhysicalNamingStrategy {

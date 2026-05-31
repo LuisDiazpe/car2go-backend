@@ -11,7 +11,7 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * Vehicle aggregate root — Vehicle Management Bounded Context.
+ * Vehicle aggregate root — Vehicle Management Bounded Context
  *
  * US-03: Vendedor lista un auto (crea vehículo con estado PENDING)
  * US-04: Vendedor edita su listado

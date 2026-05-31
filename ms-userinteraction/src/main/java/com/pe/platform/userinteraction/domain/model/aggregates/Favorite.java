@@ -5,8 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 /**
- * Favorite aggregate — User Interaction BC.
- * US-08: Comprador guarda autos favoritos para revisarlos después.
+ * Favorite aggregate — User Interaction BC
+ * US-08: Comprador guarda autos favoritos para revisarlos después
  */
 @Getter
 @Entity

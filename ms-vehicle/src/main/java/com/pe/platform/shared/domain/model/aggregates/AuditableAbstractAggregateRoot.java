@@ -10,8 +10,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
- * Base aggregate root with auditing fields.
- * All domain aggregates must extend this class.
+ * Base aggregate root with auditing fields
+ * All domain aggregates must extend this class
  */
 @Getter
 @MappedSuperclass

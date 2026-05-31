@@ -3,11 +3,11 @@ package com.pe.platform.shared.infrastructure.security;
 import lombok.Getter;
 
 /**
- * Representa al usuario autenticado en un microservicio downstream.
+ * Representa al usuario autenticado en un microservicio downstream
  *
- * No depende de IAM. La identidad llega via headers (X-User-Id, X-User-Role)
- * que el API Gateway inyecta tras validar el JWT. Sustituye a UserDetailsImpl
- * del monolito.
+ * La identidad llega via headers (X-User-Id, X-User-Role)
+ * que el API Gateway inyecta tras validar el JWT
+ *
  */
 @Getter
 public class CurrentUser {

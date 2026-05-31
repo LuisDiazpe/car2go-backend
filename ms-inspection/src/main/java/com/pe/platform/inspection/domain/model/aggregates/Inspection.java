@@ -10,7 +10,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * Inspection aggregate root — Vehicle Management BC (inspections sub-domain).
+ * Inspection aggregate root — Vehicle Management BC (inspections sub-domain)
  *
  * US-11: Vendedor solicita certificación
  * US-12: Comprador ve el informe de certificación

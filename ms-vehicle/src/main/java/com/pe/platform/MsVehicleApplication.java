@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-/** Microservicio Vehicle Management - catalogo, publicacion, busqueda de autos. BD: db_vehicle */
+/** Microservicio Vehicle Management - catalogo, publicacion, busqueda de autos BD: db_vehicle */
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableDiscoveryClient

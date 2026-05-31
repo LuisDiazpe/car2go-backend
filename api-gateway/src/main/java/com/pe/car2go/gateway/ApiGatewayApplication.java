@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * API Gateway - punto de entrada unico al sistema.
- * Enruta las peticiones a cada microservicio descubriendolos via Eureka.
- * El cliente (frontend Angular) solo conoce esta URL, no las de los 5 servicios.
+ * API Gateway
+ * Enruta las peticiones a cada microservicio descubriendolos via Eureka
+ * El cliente  solo conoce esta URL, no las de los 5 servicios
  */
 @SpringBootApplication
 public class ApiGatewayApplication {

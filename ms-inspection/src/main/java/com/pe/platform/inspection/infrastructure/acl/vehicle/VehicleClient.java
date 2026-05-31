@@ -5,13 +5,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 
 /**
- * Anti-Corruption Layer (ACL) hacia el microservicio ms-vehicle.
+ * Anti-Corruption Layer (ACL) hacia el microservicio ms-vehicle
  *
- * En el monolito, Inspection accedia directo al VehicleRepository.
- * Ahora que Vehicle es un microservicio independiente con su propia BD,
- * la comunicacion se hace via REST usando OpenFeign.
  *
- * Eureka resuelve "ms-vehicle" a la direccion real del servicio (lb://).
+ * Vehicle es un microservicio independiente con su propia BD,
+ * la comunicacion se hace via REST usando OpenFeign
+ *
+ * Eureka resuelve "ms-vehicle" a la direccion real del servicio (lb://)
  */
 @FeignClient(name = "ms-vehicle")
 public interface VehicleClient {

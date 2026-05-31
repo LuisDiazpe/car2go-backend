@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * US-08: Comprador guarda/elimina autos favoritos.
+ * US-08: Comprador guarda/elimina autos favoritos
  */
 @RestController
 @RequestMapping("/api/v1/favorites")

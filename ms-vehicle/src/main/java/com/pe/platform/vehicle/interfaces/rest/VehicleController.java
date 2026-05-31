@@ -141,7 +141,7 @@ public class VehicleController {
         return ResponseEntity.ok(vehicles);
     }
 
-    // ===== Endpoints internos (service-to-service): ms-inspection los llama =====
+    // Endpoints internos (service-to-service): ms-inspection los llama
 
     /** Llamado por ms-inspection cuando el mecanico APRUEBA: PENDING -> REVIEWED */
     @PutMapping("/{id}/mark-reviewed")

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Transaction REST controller — Payment BC.
+ * Transaction REST controller — Payment BC
  * US-16: Comprador realiza pago
  * US-17: Vendedor recibe confirmación
  * US-18: Historial de transacciones
@@ -50,7 +50,7 @@ public class TransactionController {
                 Double.valueOf(body.get("amount").toString()),
                 body.getOrDefault("paymentMethod", "CARD").toString()
         );
-        transaction.complete(); // Simula pago exitoso (integrar Stripe/PayPal en producción)
+        transaction.complete(); //Simula pago exitoso (integrar Stripe/PayPal )
         var saved = transactionRepository.save(transaction);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

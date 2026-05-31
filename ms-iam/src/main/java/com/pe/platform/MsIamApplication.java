@@ -6,9 +6,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
- * Microservicio IAM - Identidad, Autenticacion y Autorizacion.
- * Responsabilidad: registro, login, JWT, roles.
- * BD propia: db_iam (independiente de los demas microservicios).
+ * Microservicio IAM - Identidad, Autenticacion y Autorizacion
+ * Responsabilidad: registro, login, JWT, roles
+ * BD propia: db_iam (independiente de los demas microservicios)
  */
 @SpringBootApplication
 @EnableJpaAuditing

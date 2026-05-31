@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 /**
- * Transaction aggregate — Payment BC.
+ * Transaction aggregate — Payment BC
  * US-16: Pago seguro entre comprador y vendedor
  * US-17: Confirmación de transacción al vendedor
  * US-18: Historial de transacciones

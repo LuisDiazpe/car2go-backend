@@ -11,13 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
- * Application service for inspection use cases.
+ * Application service for inspection use cases
  * US-11: Vendedor solicita certificacion -> crea Inspection(PENDING)
  * US-13: Mecanico se asigna -> estado IN_PROGRESS
  * US-15: Mecanico aprueba/rechaza -> actualiza Inspection y notifica a ms-vehicle
  *
- * MICROSERVICIOS: la comunicacion con Vehicle ya no es por repositorio directo,
- * sino via REST (OpenFeign + Circuit Breaker) a traves de VehicleAclService.
+ * MICROSERVICIOS
+ * via REST (OpenFeign + Circuit Breaker) a traves de VehicleAclService
  */
 @Service
 @Transactional
@@ -57,7 +57,7 @@ public class InspectionCommandServiceImpl implements InspectionCommandService {
                     inspection.approve(command);
                     inspectionRepository.save(inspection);
 
-                    // Notifica a ms-vehicle via REST (Feign + Circuit Breaker)
+                    // Notifica a ms-vehicle via REST
                     vehicleAclService.markReviewed(inspection.getVehicleId());
 
                     return inspection;
@@ -74,7 +74,7 @@ public class InspectionCommandServiceImpl implements InspectionCommandService {
                     inspection.reject(notes);
                     inspectionRepository.save(inspection);
 
-                    // Notifica a ms-vehicle via REST (Feign + Circuit Breaker)
+                    // Notifica a ms-vehicle via REST
                     vehicleAclService.markRejected(inspection.getVehicleId());
 
                     return inspection;

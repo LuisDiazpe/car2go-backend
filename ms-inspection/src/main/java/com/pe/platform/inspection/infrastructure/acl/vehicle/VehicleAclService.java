@@ -6,13 +6,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * Facade resiliente sobre VehicleClient.
+ * Facade resiliente sobre VehicleClient
  *
  * Aplica Circuit Breaker (Resilience4j): si ms-vehicle esta caido,
  * no se propaga la falla en cascada. El metodo fallback registra el
- * problema sin romper el flujo de aprobacion de la inspeccion.
+ * problema sin romper el flujo de aprobacion de la inspeccion
  *
- * Esto responde al atributo de calidad de RESILIENCIA / DISPONIBILIDAD.
+ * atributo de calidad de RESILIENCIA / DISPONIBILIDAD
  */
 @Service
 public class VehicleAclService {

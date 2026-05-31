@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * Application service for User authentication use cases.
  * US-01: Registro con rol seleccionado (BUYER, SELLER, MECHANIC)
- * US-02: Login que retorna JWT real — corrige el bug de seguridad del frontend original
+ * US-02: Login que retorna JWT
  */
 @Service
 @Transactional

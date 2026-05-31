@@ -15,13 +15,11 @@ import java.util.List;
 
 /**
  * Filtro que lee la identidad inyectada por el API Gateway en los headers
- * (X-User-Id, X-User-Name, X-User-Role) y arma el contexto de Spring Security.
+ * (X-User-Id, X-User-Name, X-User-Role) y arma el contexto de Spring Security
  *
- * Asi los @PreAuthorize("hasAuthority('ROLE_SELLER')") de los controllers
- * siguen funcionando sin depender del modulo IAM.
+ * @PreAuthorize("hasAuthority('ROLE_SELLER')") sigue funcionando
  *
- * Seguridad: estos headers solo son confiables porque el unico camino hacia
- * el microservicio es a traves del Gateway (en produccion se aisla por red).
+ * el unico camino hacia el microservicio es a traves del Gateway
  */
 @Component
 public class GatewayAuthenticationFilter extends OncePerRequestFilter {
