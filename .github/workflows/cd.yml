@@ -1,0 +1,45 @@
+name: CD - Deploy to Render
+
+# Se ejecuta solo al hacer push a la rama de produccion.
+# Dispara el redeploy de cada servicio en Render via Deploy Hook.
+# Los Deploy Hooks se guardan como Secrets del repositorio (Settings > Secrets).
+on:
+  push:
+    branches: [ feature/microservices-migration ]   # cambiar a main cuando se mergee
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy ${{ matrix.service }} a Render
+    strategy:
+      matrix:
+        include:
+          - service: discovery-server
+            hook_secret: RENDER_HOOK_DISCOVERY
+          - service: config-server
+            hook_secret: RENDER_HOOK_CONFIG
+          - service: api-gateway
+            hook_secret: RENDER_HOOK_GATEWAY
+          - service: ms-iam
+            hook_secret: RENDER_HOOK_IAM
+          - service: ms-vehicle
+            hook_secret: RENDER_HOOK_VEHICLE
+          - service: ms-inspection
+            hook_secret: RENDER_HOOK_INSPECTION
+          - service: ms-payment
+            hook_secret: RENDER_HOOK_PAYMENT
+          - service: ms-userinteraction
+            hook_secret: RENDER_HOOK_USERINTERACTION
+
+    steps:
+      - name: Disparar deploy de ${{ matrix.service }}
+        env:
+          HOOK_URL: ${{ secrets[matrix.hook_secret] }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "No hay Deploy Hook configurado para ${{ matrix.service }}, se omite."
+            exit 0
+          fi
+          echo "Disparando redeploy de ${{ matrix.service }}..."
+          curl -fsS -X POST "$HOOK_URL"
+          echo "Deploy de ${{ matrix.service }} solicitado correctamente."

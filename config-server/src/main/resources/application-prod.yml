@@ -1,0 +1,26 @@
+server:
+  port: ${PORT:8888}
+
+spring:
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/configurations
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false
+    prefer-ip-address: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
