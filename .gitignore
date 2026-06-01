@@ -1,36 +1,21 @@
-# ============ Java / Maven ============
+# Compilados Maven
 target/
-*.class
 *.jar
 *.war
-*.ear
-*.nar
-*.zip
-*.tar.gz
-*.rar
 
-# ============ Spring Boot ============
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-# ============ Variables de entorno ============
-.env
-*.env
-!.env.example
-
-# ============ IDE ============
+# IntelliJ
 .idea/
-*.iws
 *.iml
-*.ipr
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.iws
 
-# ============ OS ============
+# Logs y errores
+*.log
+hs_err_pid*.log
+*.jfr
+
+# Variables de entorno
+.env
+
+# Sistema
 .DS_Store
 Thumbs.db

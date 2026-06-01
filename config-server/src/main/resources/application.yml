@@ -1,0 +1,20 @@
+server:
+  port: ${PORT:8888}
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    # 'native' siempre activo;
+    active: ${SPRING_PROFILES_ACTIVE:native}
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/configurations
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

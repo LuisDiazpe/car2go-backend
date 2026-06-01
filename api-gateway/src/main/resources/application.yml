@@ -1,0 +1,57 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: ms-iam
+          uri: lb://ms-iam
+          predicates:
+            - Path=/api/v1/auth/**
+        - id: ms-vehicle
+          uri: lb://ms-vehicle
+          predicates:
+            - Path=/api/v1/vehicles/**
+        - id: ms-inspection
+          uri: lb://ms-inspection
+          predicates:
+            - Path=/api/v1/inspections/**
+        - id: ms-payment
+          uri: lb://ms-payment
+          predicates:
+            - Path=/api/v1/transactions/**
+        - id: ms-userinteraction
+          uri: lb://ms-userinteraction
+          predicates:
+            - Path=/api/v1/favorites/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false
+    prefer-ip-address: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
