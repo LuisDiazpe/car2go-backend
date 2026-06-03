@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * Application service for User authentication use cases.
  * US-01: Registro con rol seleccionado (BUYER, SELLER, MECHANIC)
- * US-02: Login que retorna JWT
+ * US-02: Login que retorna JWT real — corrige el bug de seguridad del frontend original
  */
 @Service
 @Transactional
@@ -63,6 +63,9 @@ public class UserCommandServiceImpl implements UserCommandService {
         if (userRepository.existsByUsername(command.username())) {
             throw new IllegalArgumentException("Username '" + command.username() + "' already exists");
         }
+        if (userRepository.existsByEmail(command.email())) {
+            throw new IllegalArgumentException("Email '" + command.email() + "' already exists");
+        }
 
         List<Role> roles = new ArrayList<>();
         if (command.roles() == null || command.roles().isEmpty()) {
@@ -85,11 +88,21 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     @Override
     public Optional<ImmutablePair<User, String>> handle(SignInCommand command) {
+        // El usuario pudo ingresar su email o su username.
+        // Si el identificador contiene "@", lo tratamos como email y buscamos el username real.
+        String identifier = command.username();
+        String realUsername = identifier;
+        if (identifier != null && identifier.contains("@")) {
+            realUsername = userRepository.findByEmail(identifier)
+                    .map(User::getUsername)
+                    .orElse(identifier);
+        }
+
         var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(command.username(), command.password()));
+                new UsernamePasswordAuthenticationToken(realUsername, command.password()));
 
         var token = tokenService.generateToken(authentication);
-        return userRepository.findByUsername(command.username())
+        return userRepository.findByUsername(realUsername)
                 .map(user -> ImmutablePair.of(user, token));
     }
 }
