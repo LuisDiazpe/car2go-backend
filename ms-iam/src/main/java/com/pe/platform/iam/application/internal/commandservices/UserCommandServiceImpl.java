@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * Application service for User authentication use cases.
  * US-01: Registro con rol seleccionado (BUYER, SELLER, MECHANIC)
- * US-02: Login que retorna JWT
+ * US-02: Login que retorna JWT real — corrige el bug de seguridad del frontend original
  */
 @Service
 @Transactional
@@ -62,6 +62,9 @@ public class UserCommandServiceImpl implements UserCommandService {
     public Optional<User> handle(SignUpCommand command) {
         if (userRepository.existsByUsername(command.username())) {
             throw new IllegalArgumentException("Username '" + command.username() + "' already exists");
+        }
+        if (userRepository.existsByEmail(command.email())) {
+            throw new IllegalArgumentException("Email '" + command.email() + "' already exists");
         }
 
         List<Role> roles = new ArrayList<>();

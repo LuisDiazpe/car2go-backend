@@ -20,8 +20,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests unitarios del servicio de comandos de Vehicle.
- * Usa Mockito para simular el repositorio: no se conecta a la base de datos real.
+ * Tests unitarios del servicio de comandos de Vehicle
+ *
  */
 @ExtendWith(MockitoExtension.class)
 class VehicleCommandServiceImplTest {

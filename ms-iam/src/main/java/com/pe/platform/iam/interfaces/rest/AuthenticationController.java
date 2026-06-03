@@ -13,9 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Authentication REST controller
- * Expone los endpoints de registro (US-01) y login con JWT real (US-02)
- * Corrige el bug que enviaba credenciales en la URL
+ * Authentication REST controller.
+ * Expone los endpoints de registro (US-01) y login con JWT real (US-02).
+ * Corrige el bug crítico del frontend original que enviaba credenciales en la URL.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -34,7 +34,7 @@ public class AuthenticationController {
     @PostMapping("/sign-up")
     @Operation(summary = "Registrar nuevo usuario", description = "Roles válidos: BUYER, SELLER, MECHANIC")
     public ResponseEntity<AuthenticatedUserResource> signUp(@RequestBody SignUpResource resource) {
-        var command = new SignUpCommand(resource.username(), resource.password(), resource.roles());
+        var command = new SignUpCommand(resource.username(), resource.email(), resource.password(), resource.roles());
         var user = userCommandService.handle(command);
         return user.map(u -> new AuthenticatedUserResource(
                         u.getId(), u.getUsername(), null, u.getPrimaryRoleName()))
