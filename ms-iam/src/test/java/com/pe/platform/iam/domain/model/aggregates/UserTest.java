@@ -12,12 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests unitarios de la entidad User (IAM BC)
- * Prueba la logica de roles sin base de datos
  */
 class UserTest {
 
     private User crearUsuario(Roles rol) {
-        var command = new SignUpCommand("usuario1", "123456", List.of(rol.name()));
+        var command = new SignUpCommand("usuario1", "usuario1@test.com", "123456", List.of(rol.name()));
         return new User(command, "hashEncriptado", List.of(new Role(rol)));
     }
 
@@ -53,7 +52,7 @@ class UserTest {
     @Test
     @DisplayName("Un usuario con varios roles guarda todos")
     void usuarioConVariosRoles() {
-        var command = new SignUpCommand("multi", "123456",
+        var command = new SignUpCommand("multi", "multi@test.com", "123456",
                 List.of("ROLE_BUYER", "ROLE_SELLER"));
         var user = new User(command, "hash",
                 List.of(new Role(Roles.ROLE_BUYER), new Role(Roles.ROLE_SELLER)));

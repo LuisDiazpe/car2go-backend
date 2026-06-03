@@ -21,14 +21,17 @@ public class User extends AuditableAbstractAggregateRoot<User> {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
     @Column(nullable = false)
     private String passwordHash;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<Role> roles = new ArrayList<>();
 
@@ -36,6 +39,7 @@ public class User extends AuditableAbstractAggregateRoot<User> {
 
     public User(SignUpCommand command, String passwordHash, List<Role> roles) {
         this.username = command.username();
+        this.email = command.email();
         this.passwordHash = passwordHash;
         this.roles = roles;
     }
