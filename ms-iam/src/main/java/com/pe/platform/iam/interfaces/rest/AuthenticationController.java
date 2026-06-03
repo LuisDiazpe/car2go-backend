@@ -48,7 +48,7 @@ public class AuthenticationController {
     @PostMapping("/sign-in")
     @Operation(summary = "Iniciar sesión y obtener JWT")
     public ResponseEntity<AuthenticatedUserResource> signIn(@RequestBody SignInResource resource) {
-        var command = new SignInCommand(resource.username(), resource.password());
+        var command = new SignInCommand(resource.resolveIdentifier(), resource.password());
         var result = userCommandService.handle(command);
         return result.map(pair -> {
             var user = pair.getLeft();

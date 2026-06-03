@@ -88,11 +88,21 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     @Override
     public Optional<ImmutablePair<User, String>> handle(SignInCommand command) {
+        // El usuario pudo ingresar su email o su username.
+        // Si el identificador contiene "@", lo tratamos como email y buscamos el username real.
+        String identifier = command.username();
+        String realUsername = identifier;
+        if (identifier != null && identifier.contains("@")) {
+            realUsername = userRepository.findByEmail(identifier)
+                    .map(User::getUsername)
+                    .orElse(identifier);
+        }
+
         var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(command.username(), command.password()));
+                new UsernamePasswordAuthenticationToken(realUsername, command.password()));
 
         var token = tokenService.generateToken(authentication);
-        return userRepository.findByUsername(command.username())
+        return userRepository.findByUsername(realUsername)
                 .map(user -> ImmutablePair.of(user, token));
     }
 }
