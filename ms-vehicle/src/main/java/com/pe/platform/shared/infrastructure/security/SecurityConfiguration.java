@@ -10,9 +10,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configuracion de seguridad del microservicio
- * No valida JWT (eso lo hace el Gateway), solo lee la identidad de los headers
- * via GatewayAuthenticationFilter
+ * Configuracion de seguridad del microservicio.
+ * No valida JWT (eso lo hace el Gateway). Solo lee la identidad de los headers
+ * via GatewayAuthenticationFilter y habilita @PreAuthorize por rol.
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -27,18 +27,20 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
-                                 "/api-docs/**", "/v3/api-docs/**",
-                                 "/actuator/**").permitAll()
-                // GET de vehiculos es publico (catalogo)
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/vehicles/**").permitAll()
-                // resto: la identidad viene del Gateway, el @PreAuthorize valida el rol
-                .anyRequest().permitAll()
-            )
-            .addFilterBefore(gatewayAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                "/api-docs/**", "/v3/api-docs/**",
+                                "/actuator/**").permitAll()
+                        // /my requiere autenticación (debe ir ANTES de la regla pública de GET)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/vehicles/my").authenticated()
+                        // GET de vehiculos es publico (catalogo)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/vehicles/**").permitAll()
+                        // resto: la identidad viene del Gateway, el @PreAuthorize valida el rol
+                        .anyRequest().permitAll()
+                )
+                .addFilterBefore(gatewayAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
