@@ -81,6 +81,20 @@ public class InspectionController {
         return ResponseEntity.ok(inspections);
     }
 
+    /** Mecánico ve las inspecciones que tiene asignadas (en progreso) */
+    @GetMapping("/assigned")
+    @PreAuthorize("hasAuthority('ROLE_MECHANIC')")
+    @Operation(summary = "Ver mis inspecciones asignadas en progreso (mecánico)")
+    public ResponseEntity<List<InspectionResource>> getAssignedInspections(
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        var inspections = inspectionQueryService
+                .handle(new GetAssignedInspectionsQuery(currentUser.getId()))
+                .stream()
+                .map(InspectionResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+        return ResponseEntity.ok(inspections);
+    }
+
     /** US-14: Mecánico se asigna a una inspección */
     @PutMapping("/{id}/assign")
     @PreAuthorize("hasAuthority('ROLE_MECHANIC')")

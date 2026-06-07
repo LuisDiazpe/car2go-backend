@@ -35,4 +35,11 @@ public class InspectionQueryServiceImpl implements InspectionQueryService {
     public List<Inspection> handle(GetPendingInspectionsQuery query) {
         return inspectionRepository.findByStatus(InspectionStatus.PENDING);
     }
+
+    @Override
+    public List<Inspection> handle(GetAssignedInspectionsQuery query) {
+        // Inspecciones que el mecánico tiene en progreso (asignadas a él)
+        return inspectionRepository.findByMechanicProfileIdAndStatus(
+                query.mechanicProfileId(), InspectionStatus.IN_PROGRESS);
+    }
 }

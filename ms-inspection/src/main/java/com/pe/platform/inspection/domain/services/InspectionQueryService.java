@@ -10,4 +10,5 @@ public interface InspectionQueryService {
     Optional<Inspection> handle(GetInspectionByIdQuery query);
     List<Inspection> handle(GetInspectionsByVehicleIdQuery query);
     List<Inspection> handle(GetPendingInspectionsQuery query);
+    List<Inspection> handle(GetAssignedInspectionsQuery query);
 }
