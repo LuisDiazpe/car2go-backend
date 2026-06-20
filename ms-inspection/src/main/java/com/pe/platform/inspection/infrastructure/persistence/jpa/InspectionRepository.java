@@ -12,4 +12,5 @@ public interface InspectionRepository extends JpaRepository<Inspection, Long> {
     List<Inspection> findByVehicleId(Long vehicleId);
     List<Inspection> findByStatus(InspectionStatus status);
     List<Inspection> findByMechanicProfileId(Long mechanicProfileId);
+    List<Inspection> findByMechanicProfileIdAndStatus(Long mechanicProfileId, InspectionStatus status);
 }

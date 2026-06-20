@@ -22,12 +22,12 @@ import java.util.List;
  * Filtro global del Gateway que valida el JWT en el punto de entrada.
  *
  * Estrategia de seguridad distribuida:
- *  -El Gateway valida el token UNA sola vez
- *  -Extrae userId y role del token
- *  -Los inyecta como headers (X-User-Id, X-User-Role) hacia los microservicios
- *  -Los microservicios confian en esos headers (solo el Gateway puede alcanzarlos)
+ *  - El Gateway valida el token UNA sola vez.
+ *  - Extrae userId y role del token.
+ *  - Los inyecta como headers (X-User-Id, X-User-Role) hacia los microservicios.
+ *  - Los microservicios confian en esos headers (solo el Gateway puede alcanzarlos).
  *
- * Rutas publicas no requieren token
+ * Rutas publicas (sign-up, sign-in, catalogo, swagger) no requieren token.
  */
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
@@ -54,9 +54,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // Rutas publicas
-        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains)
-                || (path.startsWith("/api/v1/vehicles") && request.getMethod().name().equals("GET"));
+        // Rutas publicas: GET de vehiculos es publico (catalogo), EXCEPTO /my que requiere identidad
+        boolean isPublicVehicleGet = path.startsWith("/api/v1/vehicles")
+                && request.getMethod().name().equals("GET")
+                && !path.contains("/my");
+        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains) || isPublicVehicleGet;
 
         if (isPublic) {
             return chain.filter(exchange);
