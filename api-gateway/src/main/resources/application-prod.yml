@@ -6,7 +6,6 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      # Descubre microservicios via Eureka automaticamente
       discovery:
         locator:
           enabled: true
@@ -36,7 +35,13 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_URL}
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
+    secure-port-enabled: true
+    secure-port: 443
+    non-secure-port-enabled: false
+    prefer-ip-address: false
 
 management:
   endpoints:
