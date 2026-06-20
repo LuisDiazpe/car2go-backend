@@ -62,6 +62,11 @@ public class ReviewController {
             return ResponseEntity.badRequest().body(Map.of("message", "Rating must be between 1 and 5"));
         }
 
+        // No puedes reseñarte a ti mismo
+        if (currentUser.getId().equals(resource.targetProfileId())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "You cannot review yourself"));
+        }
+
         // Regla de negocio: el autor debe tener al menos 1 transacción (consulta a ms-payment vía Feign)
         try {
             var result = paymentClient.countTransactions(currentUser.getId());
