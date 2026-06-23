@@ -28,6 +28,7 @@ import java.util.List;
  *  - Los microservicios confian en esos headers (solo el Gateway puede alcanzarlos).
  *
  * Rutas publicas (sign-up, sign-in, catalogo, swagger) no requieren token.
+ * Lectura (GET) de reseñas y comentarios tambien es publica; escribir (POST) requiere token.
  */
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
@@ -53,12 +54,21 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
+        boolean isGet = request.getMethod().name().equals("GET");
 
-        // Rutas publicas: GET de vehiculos es publico (catalogo), EXCEPTO /my que requiere identidad
+        // GET de vehiculos es publico (catalogo), EXCEPTO /my que requiere identidad
         boolean isPublicVehicleGet = path.startsWith("/api/v1/vehicles")
-                && request.getMethod().name().equals("GET")
+                && isGet
                 && !path.contains("/my");
-        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains) || isPublicVehicleGet;
+
+        // GET de reseñas y comentarios es publico (ver perfil de un usuario sin login).
+        // El POST (dejar reseña/comentario) NO entra aqui, asi que seguira requiriendo token.
+        boolean isPublicSocialGet = isGet
+                && (path.startsWith("/api/v1/reviews/user/") || path.startsWith("/api/v1/comments/user/"));
+
+        boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains)
+                || isPublicVehicleGet
+                || isPublicSocialGet;
 
         if (isPublic) {
             return chain.filter(exchange);
