@@ -15,6 +15,10 @@ spring:
           uri: lb://ms-iam
           predicates:
             - Path=/api/v1/auth/**
+        - id: ms-iam-users
+          uri: lb://ms-iam
+          predicates:
+            - Path=/api/v1/users/**
         - id: ms-vehicle
           uri: lb://ms-vehicle
           predicates:
