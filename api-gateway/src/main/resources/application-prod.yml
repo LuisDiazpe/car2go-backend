@@ -30,7 +30,7 @@ spring:
         - id: ms-userinteraction
           uri: lb://ms-userinteraction
           predicates:
-            - Path=/api/v1/favorites/**
+            - Path=/api/v1/favorites/**,/api/v1/comments/**,/api/v1/reviews/**
 
 eureka:
   client:
