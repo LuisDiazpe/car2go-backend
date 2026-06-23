@@ -28,7 +28,8 @@ import java.util.List;
  *  - Los microservicios confian en esos headers (solo el Gateway puede alcanzarlos).
  *
  * Rutas publicas (sign-up, sign-in, catalogo, swagger) no requieren token.
- * Lectura (GET) de reseñas y comentarios tambien es publica; escribir (POST) requiere token.
+ * Lectura (GET) de reseñas, comentarios, ranking y usuarios-por-rol tambien es publica;
+ * escribir (POST) requiere token.
  */
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
@@ -61,14 +62,18 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 && isGet
                 && !path.contains("/my");
 
-        // GET de reseñas y comentarios es publico (ver perfil de un usuario sin login).
-        // El POST (dejar reseña/comentario) NO entra aqui, asi que seguira requiriendo token.
+        // GET de reseñas y comentarios de un usuario es publico (ver perfil sin login).
         boolean isPublicSocialGet = isGet
                 && (path.startsWith("/api/v1/reviews/user/") || path.startsWith("/api/v1/comments/user/"));
 
+        // Feature D: GET de ranking y de usuarios-por-rol es publico (para el listado de recomendados).
+        boolean isPublicRankingGet = isGet
+                && (path.startsWith("/api/v1/reviews/ranking") || path.startsWith("/api/v1/users/by-role/"));
+
         boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains)
                 || isPublicVehicleGet
-                || isPublicSocialGet;
+                || isPublicSocialGet
+                || isPublicRankingGet;
 
         if (isPublic) {
             return chain.filter(exchange);

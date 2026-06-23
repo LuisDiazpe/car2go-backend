@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Sprint 3 — Reseñas (estrellas 1-5).
@@ -95,4 +96,31 @@ public class ReviewController {
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(reviewRepository.save(review));
     }
+
+    /**
+     * Sprint 3 (Feature D): dado un conjunto de usuarios, devuelve el promedio
+     * de estrellas y cantidad de reseñas de cada uno. Sirve para construir
+     * el ranking de "más recomendados" en el frontend.
+     * Endpoint de lectura pública.
+     */
+    @GetMapping("/ranking")
+    @Operation(summary = "Promedios de reseñas de varios usuarios (para ranking)")
+    public ResponseEntity<List<Map<String, Object>>> getRanking(@RequestParam List<Long> ids) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Long id : ids) {
+            List<Review> reviews = reviewRepository.findByTargetProfileIdOrderByCreatedAtDesc(id);
+            double average = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+            result.add(Map.of(
+                    "profileId", id,
+                    "average", Math.round(average * 10.0) / 10.0,
+                    "count", reviews.size()
+            ));
+        }
+        // Ordenar de mayor a menor promedio (los mejores primero)
+        result.sort((a, b) -> Double.compare(
+                (double) b.get("average"), (double) a.get("average")));
+        return ResponseEntity.ok(result);
+    }
+
+
 }
