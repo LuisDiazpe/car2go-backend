@@ -98,4 +98,22 @@ public class TransactionController {
                 })
                 .orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     }
+
+    /**
+     * Endpoint interno (servicio-a-servicio): cuenta las transacciones de un usuario,
+     * sumando las que tiene como comprador y como vendedor.
+     * Lo consume ms-userinteraction para validar si el usuario puede dejar reseñas.
+     */
+    @GetMapping("/count/{profileId}")
+    @Operation(summary = "Contar transacciones de un usuario (uso interno entre microservicios)")
+    public ResponseEntity<Map<String, Object>> countTransactions(@PathVariable Long profileId) {
+        long asBuyer = transactionRepository.findByBuyerProfileId(profileId).size();
+        long asSeller = transactionRepository.findBySellerProfileId(profileId).size();
+        long total = asBuyer + asSeller;
+        return ResponseEntity.ok(Map.of(
+                "profileId", profileId,
+                "total", total,
+                "hasTransactions", total > 0
+        ));
+    }
 }

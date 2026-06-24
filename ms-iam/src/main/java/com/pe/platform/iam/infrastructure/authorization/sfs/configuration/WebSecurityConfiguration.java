@@ -60,6 +60,7 @@ public class WebSecurityConfiguration {
                                 "/api/v1/auth/**",
                                 "/api/v1/vehicles/**",
                                 "/api/v1/inspections/vehicle/**",
+                                "/api/v1/users/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/api-docs/**",
