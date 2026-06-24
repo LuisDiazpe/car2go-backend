@@ -45,6 +45,9 @@ public class CommentController {
             @RequestBody CreateCommentResource resource,
             @AuthenticationPrincipal CurrentUser currentUser) {
 
+        if (currentUser.getId().equals(resource.targetProfileId())) {
+            return ResponseEntity.badRequest().body(null);
+        }
         var comment = new Comment(
                 currentUser.getId(),
                 currentUser.getUsername(),
