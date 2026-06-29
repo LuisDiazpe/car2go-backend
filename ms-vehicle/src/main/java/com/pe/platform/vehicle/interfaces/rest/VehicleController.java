@@ -166,4 +166,16 @@ public class VehicleController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    /** Llamado por ms-payment cuando se completa la compra: REVIEWED -> SOLD */
+    @PutMapping("/{id}/mark-sold")
+    @Operation(summary = "[Interno] Marcar vehiculo como SOLD (llamado por ms-payment)")
+    public ResponseEntity<Void> markSold(@PathVariable Long id) {
+        try {
+            vehicleCommandService.markSold(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

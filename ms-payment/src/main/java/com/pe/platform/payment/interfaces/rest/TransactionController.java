@@ -2,9 +2,7 @@ package com.pe.platform.payment.interfaces.rest;
 
 import com.pe.platform.shared.infrastructure.security.CurrentUser;
 import com.pe.platform.payment.domain.model.aggregates.Transaction;
-import com.pe.platform.payment.domain.model.commands.CreateTransactionCommand;
-import com.pe.platform.payment.domain.model.queries.GetTransactionsByBuyerQuery;
-import com.pe.platform.payment.domain.model.queries.GetTransactionsBySellerQuery;
+import com.pe.platform.payment.infrastructure.acl.VehicleClient;
 import com.pe.platform.payment.infrastructure.persistence.jpa.TransactionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,9 +28,12 @@ import java.util.Map;
 public class TransactionController {
 
     private final TransactionRepository transactionRepository;
+    private final VehicleClient vehicleClient;
 
-    public TransactionController(TransactionRepository transactionRepository) {
+    public TransactionController(TransactionRepository transactionRepository,
+                                 VehicleClient vehicleClient) {
         this.transactionRepository = transactionRepository;
+        this.vehicleClient = vehicleClient;
     }
 
     /** US-16: Comprador inicia transacción de compra */
@@ -43,15 +44,27 @@ public class TransactionController {
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal CurrentUser currentUser) {
 
+        Long vehicleId = Long.valueOf(body.get("vehicleId").toString());
+
         var transaction = new Transaction(
                 currentUser.getId(),
                 Long.valueOf(body.get("sellerProfileId").toString()),
-                Long.valueOf(body.get("vehicleId").toString()),
+                vehicleId,
                 Double.valueOf(body.get("amount").toString()),
                 body.getOrDefault("paymentMethod", "CARD").toString()
         );
-        transaction.complete(); //Simula pago exitoso (integrar Stripe/PayPal )
+        transaction.complete(); // Simula pago exitoso (integrar Stripe/PayPal)
         var saved = transactionRepository.save(transaction);
+
+        // Comunicación entre microservicios: avisar a ms-vehicle que el auto se vendió.
+        // Si ms-vehicle no responde, la transacción ya quedó registrada; el fallo
+        // al marcar SOLD no debe romper la compra (se captura de forma controlada).
+        try {
+            vehicleClient.markSold(vehicleId);
+        } catch (Exception e) {
+            // Log y continuar: la compra es válida aunque el marcado falle puntualmente
+            System.err.println("No se pudo marcar el vehiculo " + vehicleId + " como SOLD: " + e.getMessage());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "id", saved.getId(),
@@ -81,6 +94,20 @@ public class TransactionController {
                 transactionRepository.findBySellerProfileId(currentUser.getId()));
     }
 
+    /** Endpoint interno: cuenta transacciones de un usuario (para validar reseñas en ms-userinteraction) */
+    @GetMapping("/count/{profileId}")
+    @Operation(summary = "Contar transacciones de un usuario (uso interno entre microservicios)")
+    public ResponseEntity<Map<String, Object>> countTransactions(@PathVariable Long profileId) {
+        long asBuyer = transactionRepository.findByBuyerProfileId(profileId).size();
+        long asSeller = transactionRepository.findBySellerProfileId(profileId).size();
+        long total = asBuyer + asSeller;
+        return ResponseEntity.ok(Map.of(
+                "profileId", profileId,
+                "total", total,
+                "hasTransactions", total > 0
+        ));
+    }
+
     /** US-19: Solicitar reembolso */
     @PutMapping("/{id}/refund")
     @PreAuthorize("hasAuthority('ROLE_BUYER')")
@@ -97,23 +124,5 @@ public class TransactionController {
                     return ResponseEntity.ok(Map.of("status", "REFUNDED"));
                 })
                 .orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
-    }
-
-    /**
-     * Endpoint interno (servicio-a-servicio): cuenta las transacciones de un usuario,
-     * sumando las que tiene como comprador y como vendedor.
-     * Lo consume ms-userinteraction para validar si el usuario puede dejar reseñas.
-     */
-    @GetMapping("/count/{profileId}")
-    @Operation(summary = "Contar transacciones de un usuario (uso interno entre microservicios)")
-    public ResponseEntity<Map<String, Object>> countTransactions(@PathVariable Long profileId) {
-        long asBuyer = transactionRepository.findByBuyerProfileId(profileId).size();
-        long asSeller = transactionRepository.findBySellerProfileId(profileId).size();
-        long total = asBuyer + asSeller;
-        return ResponseEntity.ok(Map.of(
-                "profileId", profileId,
-                "total", total,
-                "hasTransactions", total > 0
-        ));
     }
 }
