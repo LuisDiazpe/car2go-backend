@@ -12,4 +12,5 @@ public interface VehicleCommandService {
     void deleteVehicle(Long vehicleId, Long sellerProfileId);
     void markReviewed(Long vehicleId);
     void markRejected(Long vehicleId);
+    void markSold(Long vehicleId);
 }

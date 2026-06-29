@@ -63,4 +63,12 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
         vehicle.markAsRejected();
         vehicleRepository.save(vehicle);
     }
+
+    @Override
+    public void markSold(Long vehicleId) {
+        var vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + vehicleId));
+        vehicle.markAsSold();
+        vehicleRepository.save(vehicle);
+    }
 }
