@@ -14,6 +14,7 @@ public class InspectionResourceFromEntityAssembler {
                 inspection.getStatus().name(),
                 inspection.getMechanicNotes(),
                 inspection.getCertificateDetails(),
+                inspection.getInspectionFee(),
                 inspection.getScheduledAt() != null ? inspection.getScheduledAt().toString() : null,
                 inspection.getCompletedAt() != null ? inspection.getCompletedAt().toString() : null,
                 inspection.getCreatedAt() != null ? inspection.getCreatedAt().toString() : null
