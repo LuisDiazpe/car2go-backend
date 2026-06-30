@@ -4,6 +4,8 @@ import com.pe.platform.shared.infrastructure.security.CurrentUser;
 import com.pe.platform.payment.domain.model.aggregates.Transaction;
 import com.pe.platform.payment.infrastructure.acl.VehicleClient;
 import com.pe.platform.payment.infrastructure.persistence.jpa.TransactionRepository;
+import com.pe.platform.payment.infrastructure.stripe.StripeService;
+import com.pe.platform.payment.interfaces.rest.resources.CreatePaymentIntentResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -17,7 +19,7 @@ import java.util.Map;
 
 /**
  * Transaction REST controller — Payment BC
- * US-16: Comprador realiza pago
+ * US-16: Comprador realiza pago (ahora con Stripe)
  * US-17: Vendedor recibe confirmación
  * US-18: Historial de transacciones
  * US-19: Reembolso
@@ -29,17 +31,43 @@ public class TransactionController {
 
     private final TransactionRepository transactionRepository;
     private final VehicleClient vehicleClient;
+    private final StripeService stripeService;
 
     public TransactionController(TransactionRepository transactionRepository,
-                                 VehicleClient vehicleClient) {
+                                 VehicleClient vehicleClient,
+                                 StripeService stripeService) {
         this.transactionRepository = transactionRepository;
         this.vehicleClient = vehicleClient;
+        this.stripeService = stripeService;
     }
 
-    /** US-16: Comprador inicia transacción de compra */
+    /**
+     * Paso 1 del pago con Stripe: crea un PaymentIntent y devuelve el clientSecret.
+     * El frontend usa ese clientSecret para mostrar el formulario de tarjeta y confirmar.
+     */
+    @PostMapping("/create-payment-intent")
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
+    @Operation(summary = "Crear intención de pago en Stripe (devuelve clientSecret)")
+    public ResponseEntity<Map<String, String>> createPaymentIntent(
+            @RequestBody CreatePaymentIntentResource resource) {
+        try {
+            var result = stripeService.createPaymentIntent(
+                    resource.amount(),
+                    resource.currency() == null ? "pen" : resource.currency());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "No se pudo crear el pago: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Paso 2 (US-16): después de que Stripe confirma el pago en el frontend,
+     * se registra la transacción y se marca el vehículo como SOLD.
+     */
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_BUYER')")
-    @Operation(summary = "Iniciar transacción de compra")
+    @Operation(summary = "Registrar transacción de compra (tras confirmar el pago)")
     public ResponseEntity<Map<String, Object>> createTransaction(
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal CurrentUser currentUser) {
@@ -51,18 +79,15 @@ public class TransactionController {
                 Long.valueOf(body.get("sellerProfileId").toString()),
                 vehicleId,
                 Double.valueOf(body.get("amount").toString()),
-                body.getOrDefault("paymentMethod", "CARD").toString()
+                body.getOrDefault("paymentMethod", "STRIPE").toString()
         );
-        transaction.complete(); // Simula pago exitoso (integrar Stripe/PayPal)
+        transaction.complete();
         var saved = transactionRepository.save(transaction);
 
         // Comunicación entre microservicios: avisar a ms-vehicle que el auto se vendió.
-        // Si ms-vehicle no responde, la transacción ya quedó registrada; el fallo
-        // al marcar SOLD no debe romper la compra (se captura de forma controlada).
         try {
             vehicleClient.markSold(vehicleId);
         } catch (Exception e) {
-            // Log y continuar: la compra es válida aunque el marcado falle puntualmente
             System.err.println("No se pudo marcar el vehiculo " + vehicleId + " como SOLD: " + e.getMessage());
         }
 
@@ -94,7 +119,7 @@ public class TransactionController {
                 transactionRepository.findBySellerProfileId(currentUser.getId()));
     }
 
-    /** Endpoint interno: cuenta transacciones de un usuario (para validar reseñas en ms-userinteraction) */
+    /** Endpoint interno: cuenta transacciones de un usuario (para validar reseñas) */
     @GetMapping("/count/{profileId}")
     @Operation(summary = "Contar transacciones de un usuario (uso interno entre microservicios)")
     public ResponseEntity<Map<String, Object>> countTransactions(@PathVariable Long profileId) {
