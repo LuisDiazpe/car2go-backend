@@ -121,7 +121,8 @@ public class InspectionController {
             @AuthenticationPrincipal CurrentUser currentUser) {
 
         var command = new CompleteInspectionCommand(
-                id, currentUser.getId(), resource.notes(), resource.certificateDetails());
+                id, currentUser.getId(), resource.notes(),
+                resource.certificateDetails(), resource.inspectionFee());
         return inspectionCommandService.approve(command)
                 .map(InspectionResourceFromEntityAssembler::toResourceFromEntity)
                 .map(ResponseEntity::ok)

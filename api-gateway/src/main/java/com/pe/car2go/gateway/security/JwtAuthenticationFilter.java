@@ -70,10 +70,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         boolean isPublicRankingGet = isGet
                 && (path.startsWith("/api/v1/reviews/ranking") || path.startsWith("/api/v1/users/by-role/"));
 
+        boolean isPublicInterestedGet = isGet
+                && path.startsWith("/api/v1/transactions/interested/");
+
         boolean isPublic = PUBLIC_PATHS.stream().anyMatch(path::contains)
                 || isPublicVehicleGet
                 || isPublicSocialGet
-                || isPublicRankingGet;
+                || isPublicRankingGet
+                || isPublicInterestedGet;
 
         if (isPublic) {
             return chain.filter(exchange);

@@ -4,6 +4,8 @@ import com.pe.platform.shared.infrastructure.security.CurrentUser;
 import com.pe.platform.payment.domain.model.aggregates.Transaction;
 import com.pe.platform.payment.infrastructure.acl.VehicleClient;
 import com.pe.platform.payment.infrastructure.persistence.jpa.TransactionRepository;
+import com.pe.platform.payment.infrastructure.stripe.StripeService;
+import com.pe.platform.payment.interfaces.rest.resources.CreatePaymentIntentResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -17,10 +19,8 @@ import java.util.Map;
 
 /**
  * Transaction REST controller — Payment BC
- * US-16: Comprador realiza pago
- * US-17: Vendedor recibe confirmación
- * US-18: Historial de transacciones
- * US-19: Reembolso
+ * Pago con tarjeta (Stripe) -> COMPLETED + auto SOLD inmediato.
+ * Pago en efectivo -> PENDING, el vendedor confirma luego (auto pasa a SOLD al confirmar).
  */
 @RestController
 @RequestMapping("/api/v1/transactions")
@@ -29,48 +29,127 @@ public class TransactionController {
 
     private final TransactionRepository transactionRepository;
     private final VehicleClient vehicleClient;
+    private final StripeService stripeService;
 
     public TransactionController(TransactionRepository transactionRepository,
-                                 VehicleClient vehicleClient) {
+                                 VehicleClient vehicleClient,
+                                 StripeService stripeService) {
         this.transactionRepository = transactionRepository;
         this.vehicleClient = vehicleClient;
+        this.stripeService = stripeService;
     }
 
-    /** US-16: Comprador inicia transacción de compra */
+    /** Stripe paso 1: crear PaymentIntent (solo para pago con tarjeta) */
+    @PostMapping("/create-payment-intent")
+    @PreAuthorize("hasAuthority('ROLE_BUYER')")
+    @Operation(summary = "Crear intención de pago en Stripe (devuelve clientSecret)")
+    public ResponseEntity<Map<String, String>> createPaymentIntent(
+            @RequestBody CreatePaymentIntentResource resource) {
+        try {
+            var result = stripeService.createPaymentIntent(
+                    resource.amount(),
+                    resource.currency() == null ? "pen" : resource.currency());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "No se pudo crear el pago: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Registrar transacción.
+     * - paymentMethod = STRIPE: pago ya confirmado -> COMPLETED + auto SOLD.
+     * - paymentMethod = CASH:   queda PENDING, el auto NO se marca SOLD todavía.
+     */
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_BUYER')")
-    @Operation(summary = "Iniciar transacción de compra")
+    @Operation(summary = "Registrar transacción de compra (tarjeta o efectivo)")
     public ResponseEntity<Map<String, Object>> createTransaction(
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal CurrentUser currentUser) {
 
         Long vehicleId = Long.valueOf(body.get("vehicleId").toString());
+        String method = body.getOrDefault("paymentMethod", "STRIPE").toString().toUpperCase();
 
         var transaction = new Transaction(
                 currentUser.getId(),
                 Long.valueOf(body.get("sellerProfileId").toString()),
                 vehicleId,
                 Double.valueOf(body.get("amount").toString()),
-                body.getOrDefault("paymentMethod", "CARD").toString()
+                method
         );
-        transaction.complete(); // Simula pago exitoso (integrar Stripe/PayPal)
+
+        boolean isCash = method.equals("CASH") || method.equals("EFECTIVO");
+
+        if (!isCash) {
+            // Pago con tarjeta: ya se confirmó en el frontend con Stripe
+            transaction.complete();
+        }
+        // Si es efectivo: se queda en PENDING (no se llama a complete())
+
         var saved = transactionRepository.save(transaction);
 
-        // Comunicación entre microservicios: avisar a ms-vehicle que el auto se vendió.
-        // Si ms-vehicle no responde, la transacción ya quedó registrada; el fallo
-        // al marcar SOLD no debe romper la compra (se captura de forma controlada).
-        try {
-            vehicleClient.markSold(vehicleId);
-        } catch (Exception e) {
-            // Log y continuar: la compra es válida aunque el marcado falle puntualmente
-            System.err.println("No se pudo marcar el vehiculo " + vehicleId + " como SOLD: " + e.getMessage());
+        // Solo marcar SOLD si el pago fue con tarjeta (completado).
+        // Si es efectivo, el auto NO se marca SOLD hasta que el vendedor confirme.
+        if (!isCash) {
+            try {
+                vehicleClient.markSold(vehicleId);
+            } catch (Exception e) {
+                System.err.println("No se pudo marcar el vehiculo " + vehicleId + " como SOLD: " + e.getMessage());
+            }
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "id", saved.getId(),
                 "status", saved.getStatus().name(),
                 "amount", saved.getAmount(),
+                "paymentMethod", method,
                 "createdAt", saved.getCreatedAt().toString()
+        ));
+    }
+
+    /**
+     * El VENDEDOR confirma que recibió el pago en efectivo.
+     * La transacción pasa a COMPLETED y el auto se marca como SOLD.
+     */
+    @PutMapping("/{id}/confirm-cash")
+    @PreAuthorize("hasAuthority('ROLE_SELLER')")
+    @Operation(summary = "Vendedor confirma el pago en efectivo (marca el auto como vendido)")
+    public ResponseEntity<Map<String, Object>> confirmCashPayment(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+
+        var txOpt = transactionRepository.findById(id);
+        if (txOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var tx = txOpt.get();
+
+        // Solo el vendedor dueño de la venta puede confirmar
+        if (!tx.getSellerProfileId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "No eres el vendedor de esta transacción"));
+        }
+
+        try {
+            tx.complete(); // PENDING -> COMPLETED
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "La transacción ya fue procesada"));
+        }
+        transactionRepository.save(tx);
+
+        // Ahora sí, marcar el auto como vendido
+        try {
+            vehicleClient.markSold(tx.getVehicleId());
+        } catch (Exception e) {
+            System.err.println("No se pudo marcar el vehiculo " + tx.getVehicleId() + " como SOLD: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "id", tx.getId(),
+                "status", tx.getStatus().name(),
+                "vehicleId", tx.getVehicleId()
         ));
     }
 
@@ -84,7 +163,7 @@ public class TransactionController {
                 transactionRepository.findByBuyerProfileId(currentUser.getId()));
     }
 
-    /** US-17/18: Historial del vendedor autenticado */
+    /** US-17/18: Historial del vendedor autenticado (incluye las ventas en efectivo pendientes) */
     @GetMapping("/my/sales")
     @PreAuthorize("hasAuthority('ROLE_SELLER')")
     @Operation(summary = "Mis ventas")
@@ -94,7 +173,7 @@ public class TransactionController {
                 transactionRepository.findBySellerProfileId(currentUser.getId()));
     }
 
-    /** Endpoint interno: cuenta transacciones de un usuario (para validar reseñas en ms-userinteraction) */
+    /** Endpoint interno: cuenta transacciones de un usuario (para validar reseñas) */
     @GetMapping("/count/{profileId}")
     @Operation(summary = "Contar transacciones de un usuario (uso interno entre microservicios)")
     public ResponseEntity<Map<String, Object>> countTransactions(@PathVariable Long profileId) {
@@ -105,6 +184,23 @@ public class TransactionController {
                 "profileId", profileId,
                 "total", total,
                 "hasTransactions", total > 0
+        ));
+    }
+
+    /**
+     * Cuenta cuántos compradores están interesados en un vehículo (transacciones
+     * en efectivo PENDING). Se usa para mostrar "X personas quieren este auto".
+     * Endpoint interno consumido por ms-vehicle / mostrado de forma anónima.
+     */
+    @GetMapping("/interested/{vehicleId}")
+    @Operation(summary = "Contar interesados (compras en efectivo pendientes) de un vehículo")
+    public ResponseEntity<Map<String, Object>> countInterested(@PathVariable Long vehicleId) {
+        long interested = transactionRepository.findByVehicleId(vehicleId).stream()
+                .filter(t -> t.getStatus().name().equals("PENDING"))
+                .count();
+        return ResponseEntity.ok(Map.of(
+                "vehicleId", vehicleId,
+                "interested", interested
         ));
     }
 

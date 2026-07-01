@@ -76,7 +76,7 @@ class InspectionCommandServiceImplTest {
         when(inspectionRepository.findById(1L)).thenReturn(Optional.of(insp));
         when(inspectionRepository.save(any(Inspection.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var command = new CompleteInspectionCommand(1L, 7L, "Todo OK", "CERT-001");
+        var command = new CompleteInspectionCommand(1L, 7L, "Todo OK", "CERT-001", 50.0);
         var resultado = inspectionCommandService.approve(command);
 
         assertTrue(resultado.isPresent());
@@ -92,7 +92,7 @@ class InspectionCommandServiceImplTest {
         when(inspectionRepository.findById(1L)).thenReturn(Optional.of(insp));
 
         // intenta aprobar el mecanico 99 (no asignado)
-        var command = new CompleteInspectionCommand(1L, 99L, "x", "y");
+        var command = new CompleteInspectionCommand(1L, 99L, "x", "y", 50.0);
 
         assertThrows(SecurityException.class,
                 () -> inspectionCommandService.approve(command));
