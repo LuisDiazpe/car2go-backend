@@ -8,6 +8,7 @@ public record InspectionResource(
         String status,
         String mechanicNotes,
         String certificateDetails,
+        Double inspectionFee,
         String scheduledAt,
         String completedAt,
         String createdAt

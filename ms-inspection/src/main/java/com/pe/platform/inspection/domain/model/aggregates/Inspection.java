@@ -22,15 +22,12 @@ import java.time.LocalDateTime;
 @Entity
 public class Inspection extends AuditableAbstractAggregateRoot<Inspection> {
 
-    /** FK al vehículo a inspeccionar */
     @Column(nullable = false)
     private Long vehicleId;
 
-    /** FK al perfil del mecánico asignado */
     @Column
     private Long mechanicProfileId;
 
-    /** FK al perfil del vendedor que solicitó */
     @Column(nullable = false)
     private Long sellerProfileId;
 
@@ -41,9 +38,12 @@ public class Inspection extends AuditableAbstractAggregateRoot<Inspection> {
     @Column(columnDefinition = "TEXT")
     private String mechanicNotes;
 
-    /** Resultado del certificado tras la inspección */
     @Column(columnDefinition = "TEXT")
     private String certificateDetails;
+
+    /** Tarifa que cobra el mecánico por la inspección (la fija al aprobar) */
+    @Column
+    private Double inspectionFee;
 
     @Column
     private LocalDateTime scheduledAt;
@@ -60,7 +60,6 @@ public class Inspection extends AuditableAbstractAggregateRoot<Inspection> {
         this.scheduledAt = command.scheduledAt();
     }
 
-    /** US-13/14: Mecánico acepta y se asigna */
     public void assignMechanic(Long mechanicProfileId) {
         if (this.status != InspectionStatus.PENDING) {
             throw new IllegalStateException("Cannot assign mechanic to an inspection not in PENDING status");
@@ -69,18 +68,18 @@ public class Inspection extends AuditableAbstractAggregateRoot<Inspection> {
         this.status = InspectionStatus.IN_PROGRESS;
     }
 
-    /** US-15: Mecánico aprueba con certificado */
+    /** US-15: Mecánico aprueba con certificado y fija su tarifa */
     public void approve(CompleteInspectionCommand command) {
         if (this.status != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("Cannot approve inspection not in IN_PROGRESS status");
         }
         this.mechanicNotes = command.notes();
         this.certificateDetails = command.certificateDetails();
+        this.inspectionFee = command.inspectionFee();
         this.status = InspectionStatus.APPROVED;
         this.completedAt = LocalDateTime.now();
     }
 
-    /** US-15: Mecánico rechaza */
     public void reject(String notes) {
         if (this.status != InspectionStatus.IN_PROGRESS) {
             throw new IllegalStateException("Cannot reject inspection not in IN_PROGRESS status");

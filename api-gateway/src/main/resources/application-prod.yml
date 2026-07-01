@@ -30,7 +30,7 @@ spring:
         - id: ms-payment
           uri: lb://ms-payment
           predicates:
-            - Path=/api/v1/transactions/**
+            - Path=/api/v1/transactions/**,/api/v1/transactions/interested/{vehicleId}/**
         - id: ms-userinteraction
           uri: lb://ms-userinteraction
           predicates:
